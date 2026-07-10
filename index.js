@@ -3,7 +3,7 @@
 
   const icon = 'https://developer.playfab.com/React/img/playfab-mark.DOA-oZnA.png';
 
-  class PlayFabUltimatePermanent {
+  class Playfab {
     constructor() {
       this.titleId = '';
       this.secretKey = '';
@@ -659,5 +659,5 @@
     getError() { return this.lastError; }
   }
 
-  Scratch.extensions.register(new PlayFabUltimatePermanent());
+  Scratch.extensions.register(new Playfab());
 })(Scratch);
