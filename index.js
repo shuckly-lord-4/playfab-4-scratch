@@ -2,12 +2,12 @@
   'use strict';
 
   if (!Scratch.extensions.unsandboxed) {
-    throw new Error('PlayFab Cloud must run unsandboxed');
+    throw new Error('Playfab must run unsandboxed');
   }
 
   const icon = 'https://developer.playfab.com/React/img/playfab-mark.DOA-oZnA.png';
 
-  class PlayFabUltimatePermanent {
+  class Playfab {
     constructor() {
       this.titleId = '';
       this.secretKey = '';
@@ -32,7 +32,7 @@
     getInfo() {
       return {
         id: 'PlayfabExtension',
-        name: 'PlayFab Cloud',
+        name: 'Playfab',
         blockIconURI: icon,
         menuIconURI: icon,
         color1: '#d35400',
@@ -40,7 +40,6 @@
         blocks: [
 
           // ── SETUP ──────────────────────────────────────────────
-          { blockType: Scratch.BlockType.LABEL, text: 'Setup' },
           {
             opcode: 'setTitleId', blockType: Scratch.BlockType.COMMAND,
             text: 'set Title ID to [ID]',
@@ -54,7 +53,6 @@
 
           // ── AUTHENTICATION ─────────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Authentication' },
           {
             opcode: 'onLoggedIn', blockType: Scratch.BlockType.HAT,
             text: 'when player logs in', isEdgeActivated: false
@@ -96,7 +94,6 @@
 
           // ── DISPLAY NAME ───────────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Display Name' },
           {
             opcode: 'getDisplayName', blockType: Scratch.BlockType.REPORTER,
             text: 'display name'
@@ -109,7 +106,6 @@
 
           // ── CURRENCY ───────────────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Currency' },
           {
             opcode: 'getCurrencyBalance', blockType: Scratch.BlockType.REPORTER,
             text: 'balance of [VC]',
@@ -127,7 +123,6 @@
 
           // ── INVENTORY & STORE ──────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Inventory & Store' },
           {
             opcode: 'updateInventory', blockType: Scratch.BlockType.COMMAND,
             text: 'refresh inventory & currency'
@@ -210,7 +205,6 @@
 
           // ── PLAYER DATA ────────────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Player Data (Read-Only)' },
           {
             opcode: 'fetchReadOnlyData', blockType: Scratch.BlockType.COMMAND,
             text: 'refresh read-only player data'
@@ -227,7 +221,6 @@
 
           // ── TITLE DATA ─────────────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Title Data' },
           {
             opcode: 'getTitleData', blockType: Scratch.BlockType.REPORTER,
             text: 'get title data key [KEY]',
@@ -240,7 +233,6 @@
 
           // ── BAN SYSTEM ─────────────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Ban System' },
           {
             opcode: 'getIsBanned', blockType: Scratch.BlockType.BOOLEAN,
             text: 'is player banned?'
@@ -270,7 +262,6 @@
 
           // ── UTILITIES ──────────────────────────────────────────
           '---',
-          { blockType: Scratch.BlockType.LABEL, text: 'Utilities' },
           {
             opcode: 'getError', blockType: Scratch.BlockType.REPORTER,
             text: 'last error'
@@ -663,5 +654,5 @@
     getError() { return this.lastError; }
   }
 
-  Scratch.extensions.register(new PlayFabUltimatePermanent());
+  Scratch.extensions.register(new Playfab());
 })(Scratch);
