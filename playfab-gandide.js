@@ -1,3 +1,5 @@
+// dam dam diddy diddy dam dam
+
 (function(Scratch) {
   'use strict';
 
@@ -14,19 +16,18 @@
       this.sessionTicket = '';
       this.masterPlayerId = '';
       this.titlePlayerId = '';
-      this.lastLinkResult = 'No link attempted yet';
       this.displayName = 'Unknown';
       this.loggedIn = false;
       this.isPlayerBanned = false;
       this.lastError = 'None';
+      this.lastLinkResult = 'No link attempted yet';
+      this.lastRedeemResult = 'No code redeemed yet';
       this.inventory = [];
       this.currencies = {};
       this.catalog = {};
-      this.banReason = 'No active ban';
-      this.banExpires = 'N/A';
-      this.banExpiryTimestamp = null;
       this.readOnlyData = {};
-      this.lastRedeemResult = 'No code redeemed yet';
+      this.banReason = 'No active ban';
+      this.banExpiryTimestamp = null;
     }
 
     getInfo() {
@@ -37,260 +38,93 @@
         menuIconURI: icon,
         color1: '#d35400',
         color2: '#a04000',
+        color3: '#7d2f00',
         blocks: [
 
-          // ── SETUP ──────────────────────────────────────────────
-          {
-            opcode: 'setTitleId', blockType: Scratch.BlockType.COMMAND,
-            text: 'set Title ID to [ID]',
-            arguments: { ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ABCD' } }
-          },
-          {
-            opcode: 'setSecretKey', blockType: Scratch.BlockType.COMMAND,
-            text: 'set Secret Key (Admin only) to [KEY]',
-            arguments: { KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'SECRET_KEY' } }
-          },
+          // SETUP
+          { opcode: 'setTitleId', blockType: Scratch.BlockType.COMMAND, text: 'set Title ID to [ID]', arguments: { ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ABCD' } } },
+          { opcode: 'setSecretKey', blockType: Scratch.BlockType.COMMAND, text: 'set Secret Key (Admin only) to [KEY]', arguments: { KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'SECRET_KEY' } } },
 
-          // ── AUTHENTICATION ─────────────────────────────────────
+          // AUTHENTICATION
           '---',
-          {
-            opcode: 'onLoggedIn', blockType: Scratch.BlockType.HAT,
-            text: 'when player logs in', isEdgeActivated: false
-          },
-          {
-            opcode: 'onLoggedOut', blockType: Scratch.BlockType.HAT,
-            text: 'when player logs out', isEdgeActivated: false
-          },
-          {
-            opcode: 'login', blockType: Scratch.BlockType.COMMAND,
-            text: 'login with Custom ID [CUSTOM_ID]',
-            arguments: { CUSTOM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'player_123' } }
-          },
-          {
-            opcode: 'logout', blockType: Scratch.BlockType.COMMAND,
-            text: 'logout'
-          },
-          {
-            opcode: 'linkCustomId', blockType: Scratch.BlockType.COMMAND,
-            text: 'link [TEXT] to account',
-            arguments: { TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'my_custom_id' } }
-          },
-          {
-            opcode: 'getLinkResult', blockType: Scratch.BlockType.REPORTER,
-            text: 'last link result'
-          },
-          {
-            opcode: 'isLoggedIn', blockType: Scratch.BlockType.BOOLEAN,
-            text: 'is logged in?'
-          },
-          {
-            opcode: 'getMasterPlayerId', blockType: Scratch.BlockType.REPORTER,
-            text: 'Master Player ID'
-          },
-          {
-            opcode: 'getTitlePlayerId', blockType: Scratch.BlockType.REPORTER,
-            text: 'Title Player ID'
-          },
+          { opcode: 'onLoggedIn', blockType: Scratch.BlockType.HAT, text: 'when player logs in', isEdgeActivated: false },
+          { opcode: 'onLoggedOut', blockType: Scratch.BlockType.HAT, text: 'when player logs out', isEdgeActivated: false },
+          { opcode: 'login', blockType: Scratch.BlockType.COMMAND, text: 'login with Custom ID [CUSTOM_ID]', arguments: { CUSTOM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'player_123' } } },
+          { opcode: 'logout', blockType: Scratch.BlockType.COMMAND, text: 'logout' },
+          { opcode: 'isLoggedIn', blockType: Scratch.BlockType.BOOLEAN, text: 'is logged in?' },
+          { opcode: 'getMasterPlayerId', blockType: Scratch.BlockType.REPORTER, text: 'Master Player ID' },
+          { opcode: 'getTitlePlayerId', blockType: Scratch.BlockType.REPORTER, text: 'Title Player ID' },
+          { opcode: 'linkCustomId', blockType: Scratch.BlockType.COMMAND, text: 'link [TEXT] to account', arguments: { TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'my_custom_id' } } },
+          { opcode: 'getLinkResult', blockType: Scratch.BlockType.REPORTER, text: 'last link result' },
 
-          // ── DISPLAY NAME ───────────────────────────────────────
+          // DISPLAY NAME
           '---',
-          {
-            opcode: 'getDisplayName', blockType: Scratch.BlockType.REPORTER,
-            text: 'display name'
-          },
-          {
-            opcode: 'setDisplayName', blockType: Scratch.BlockType.COMMAND,
-            text: 'set display name to [NAME]',
-            arguments: { NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'PlayerName' } }
-          },
+          { opcode: 'getDisplayName', blockType: Scratch.BlockType.REPORTER, text: 'display name' },
+          { opcode: 'setDisplayName', blockType: Scratch.BlockType.COMMAND, text: 'set display name to [NAME]', arguments: { NAME: { type: Scratch.ArgumentType.STRING, defaultValue: 'PlayerName' } } },
 
-          // ── CURRENCY ───────────────────────────────────────────
+          // CURRENCY
           '---',
-          {
-            opcode: 'getCurrencyBalance', blockType: Scratch.BlockType.REPORTER,
-            text: 'balance of [VC]',
-            arguments: { VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' } }
-          },
-          {
-            opcode: 'adminAddCurrency', blockType: Scratch.BlockType.COMMAND,
-            text: 'ADMIN: add [AMT] [VC] to player [PLAYFAB_ID]',
-            arguments: {
-              AMT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
-              VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' },
-              PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' }
-            }
-          },
+          { opcode: 'getCurrencyBalance', blockType: Scratch.BlockType.REPORTER, text: 'balance of [VC]', arguments: { VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' } } },
+          { opcode: 'adminAddCurrency', blockType: Scratch.BlockType.COMMAND, text: 'ADMIN: add [AMT] [VC] to player [PLAYFAB_ID]', arguments: { AMT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }, VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' }, PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' } } },
 
-          // ── INVENTORY & STORE ──────────────────────────────────
+          // INVENTORY & STORE
           '---',
-          {
-            opcode: 'updateInventory', blockType: Scratch.BlockType.COMMAND,
-            text: 'refresh inventory & currency'
-          },
-          {
-            opcode: 'getInventoryList', blockType: Scratch.BlockType.REPORTER,
-            text: 'my items (JSON list)'
-          },
-          {
-            opcode: 'hasItem', blockType: Scratch.BlockType.BOOLEAN,
-            text: 'has item [ITEM_ID]?',
-            arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' } }
-          },
-          {
-            opcode: 'getItemPrice', blockType: Scratch.BlockType.REPORTER,
-            text: 'price of [ITEM_ID] in [VC]',
-            arguments: {
-              ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' },
-              VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' }
-            }
-          },
-          {
-            opcode: 'getItemDescription', blockType: Scratch.BlockType.REPORTER,
-            text: 'view item [ITEM_ID] description',
-            arguments: {
-              ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' }
-            }
-          },
-          {
-            opcode: 'getItemDisplayName', blockType: Scratch.BlockType.REPORTER,
-            text: 'get display name for item [ITEM_ID]',
-            arguments: {
-              ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' }
-            }
-          },
-          {
-            opcode: 'getItemImageUrl', blockType: Scratch.BlockType.REPORTER,
-            text: 'get [ITEM_ID] image URI',
-            arguments: {
-              ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' }
-            }
-          },
-          {
-            opcode: 'getRawCatalogEntry', blockType: Scratch.BlockType.REPORTER,
-            text: 'raw catalog data for [ITEM_ID] (debug)',
-            arguments: {
-              ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' }
-            }
-          },
-          {
-            opcode: 'getPricedCatalogItems', blockType: Scratch.BlockType.REPORTER,
-            text: 'all catalog item IDs with a price (JSON)'
-          },
-          {
-            opcode: 'purchaseItem', blockType: Scratch.BlockType.COMMAND,
-            text: 'buy item [ITEM_ID] with [VC] for [PRICE]',
-            arguments: {
-              ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' },
-              VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' },
-              PRICE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
-            }
-          },
-          {
-            opcode: 'giftItem', blockType: Scratch.BlockType.COMMAND,
-            text: 'ADMIN: gift item [ITEM_ID] to player [PLAYFAB_ID]',
-            arguments: {
-              ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' },
-              PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' }
-            }
-          },
-          {
-            opcode: 'redeemCoupon', blockType: Scratch.BlockType.COMMAND,
-            text: 'redeem code [COUPON]',
-            arguments: { COUPON: { type: Scratch.ArgumentType.STRING, defaultValue: 'CODE-HERE' } }
-          },
-          {
-            opcode: 'getLastRedeemResult', blockType: Scratch.BlockType.REPORTER,
-            text: 'last code redeem result'
-          },
+          { opcode: 'updateInventory', blockType: Scratch.BlockType.COMMAND, text: 'refresh inventory & currency' },
+          { opcode: 'getInventoryList', blockType: Scratch.BlockType.REPORTER, text: 'my items (JSON list)' },
+          { opcode: 'hasItem', blockType: Scratch.BlockType.BOOLEAN, text: 'has item [ITEM_ID]?', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' } } },
+          { opcode: 'getItemPrice', blockType: Scratch.BlockType.REPORTER, text: 'price of [ITEM_ID] in [VC]', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' }, VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' } } },
+          { opcode: 'getItemDisplayName', blockType: Scratch.BlockType.REPORTER, text: 'get display name for item [ITEM_ID]', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' } } },
+          { opcode: 'getItemDescription', blockType: Scratch.BlockType.REPORTER, text: 'view item [ITEM_ID] description', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' } } },
+          { opcode: 'getItemImageUrl', blockType: Scratch.BlockType.REPORTER, text: 'get [ITEM_ID] image URI', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' } } },
+          { opcode: 'getPricedCatalogItems', blockType: Scratch.BlockType.REPORTER, text: 'all catalog item IDs with a price (JSON)' },
+          { opcode: 'getRawCatalogEntry', blockType: Scratch.BlockType.REPORTER, text: 'raw catalog data for [ITEM_ID] (debug)', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' } } },
+          { opcode: 'purchaseItem', blockType: Scratch.BlockType.COMMAND, text: 'buy item [ITEM_ID] with [VC] for [PRICE]', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' }, VC: { type: Scratch.ArgumentType.STRING, defaultValue: 'GC' }, PRICE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 } } },
+          { opcode: 'giftItem', blockType: Scratch.BlockType.COMMAND, text: 'ADMIN: gift item [ITEM_ID] to player [PLAYFAB_ID]', arguments: { ITEM_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'sword_01' }, PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' } } },
+          { opcode: 'redeemCoupon', blockType: Scratch.BlockType.COMMAND, text: 'redeem code [COUPON]', arguments: { COUPON: { type: Scratch.ArgumentType.STRING, defaultValue: 'CODE-HERE' } } },
+          { opcode: 'getLastRedeemResult', blockType: Scratch.BlockType.REPORTER, text: 'last code redeem result' },
 
-          // ── PLAYER DATA ────────────────────────────────────────
+          // PLAYER DATA
           '---',
-          {
-            opcode: 'fetchReadOnlyData', blockType: Scratch.BlockType.COMMAND,
-            text: 'refresh read-only player data'
-          },
-          {
-            opcode: 'getReadOnlyKey', blockType: Scratch.BlockType.REPORTER,
-            text: 'read-only data key [KEY]',
-            arguments: { KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'MyKey' } }
-          },
-          {
-            opcode: 'getAllReadOnlyData', blockType: Scratch.BlockType.REPORTER,
-            text: 'all read-only data (JSON)'
-          },
+          { opcode: 'fetchReadOnlyData', blockType: Scratch.BlockType.COMMAND, text: 'refresh read-only player data' },
+          { opcode: 'getReadOnlyKey', blockType: Scratch.BlockType.REPORTER, text: 'read-only data key [KEY]', arguments: { KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'MyKey' } } },
+          { opcode: 'getAllReadOnlyData', blockType: Scratch.BlockType.REPORTER, text: 'all read-only data (JSON)' },
 
-          // ── TITLE DATA ─────────────────────────────────────────
+          // TITLE DATA
           '---',
-          {
-            opcode: 'getTitleData', blockType: Scratch.BlockType.REPORTER,
-            text: 'get title data key [KEY]',
-            arguments: { KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'News' } }
-          },
-          {
-            opcode: 'getOnlineCount', blockType: Scratch.BlockType.REPORTER,
-            text: 'total players online'
-          },
+          { opcode: 'getTitleData', blockType: Scratch.BlockType.REPORTER, text: 'get title data key [KEY]', arguments: { KEY: { type: Scratch.ArgumentType.STRING, defaultValue: 'News' } } },
+          { opcode: 'getOnlineCount', blockType: Scratch.BlockType.REPORTER, text: 'total players online' },
 
-          // ── BAN SYSTEM ─────────────────────────────────────────
+          // BAN SYSTEM
           '---',
-          {
-            opcode: 'getIsBanned', blockType: Scratch.BlockType.BOOLEAN,
-            text: 'is player banned?'
-          },
-          {
-            opcode: 'getBanReason', blockType: Scratch.BlockType.REPORTER,
-            text: 'ban reason'
-          },
-          {
-            opcode: 'getBanExpires', blockType: Scratch.BlockType.REPORTER,
-            text: 'ban hours remaining'
-          },
-          {
-            opcode: 'banPlayer', blockType: Scratch.BlockType.COMMAND,
-            text: 'ADMIN: ban [PLAYFAB_ID] for [HOURS] hrs reason: [REASON]',
-            arguments: {
-              PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' },
-              HOURS: { type: Scratch.ArgumentType.NUMBER, defaultValue: 24 },
-              REASON: { type: Scratch.ArgumentType.STRING, defaultValue: 'Cheating' }
-            }
-          },
-          {
-            opcode: 'unbanPlayer', blockType: Scratch.BlockType.COMMAND,
-            text: 'ADMIN: unban player [PLAYFAB_ID]',
-            arguments: { PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' } }
-          },
+          { opcode: 'getIsBanned', blockType: Scratch.BlockType.BOOLEAN, text: 'is player banned?' },
+          { opcode: 'getBanReason', blockType: Scratch.BlockType.REPORTER, text: 'ban reason' },
+          { opcode: 'getBanExpires', blockType: Scratch.BlockType.REPORTER, text: 'ban hours remaining' },
+          { opcode: 'banPlayer', blockType: Scratch.BlockType.COMMAND, text: 'ADMIN: ban [PLAYFAB_ID] for [HOURS] hrs reason: [REASON]', arguments: { PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' }, HOURS: { type: Scratch.ArgumentType.NUMBER, defaultValue: 24 }, REASON: { type: Scratch.ArgumentType.STRING, defaultValue: 'Cheating' } } },
+          { opcode: 'unbanPlayer', blockType: Scratch.BlockType.COMMAND, text: 'ADMIN: unban player [PLAYFAB_ID]', arguments: { PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' } } },
 
-          // ── UTILITIES ──────────────────────────────────────────
+          // UTILITIES
           '---',
-          {
-            opcode: 'getError', blockType: Scratch.BlockType.REPORTER,
-            text: 'last error'
-          }
+          { opcode: 'getError', blockType: Scratch.BlockType.REPORTER, text: 'last error' }
         ]
       };
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // AUTHENTICATION
-    // ─────────────────────────────────────────────────────────────
+    // ── SETUP ──────────────────────────────────────────────────────
+    setTitleId(args)   { this.titleId = args.ID; }
+    setSecretKey(args) { this.secretKey = args.KEY; }
 
+    // ── AUTHENTICATION ─────────────────────────────────────────────
     async login(args) {
       this.isPlayerBanned = false;
       this.banReason = 'No active ban';
-      this.banExpires = 'N/A';
       this.banExpiryTimestamp = null;
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/LoginWithCustomID`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/LoginWithCustomID`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            TitleId: this.titleId,
-            CustomId: args.CUSTOM_ID,
-            CreateAccount: true,
-            InfoRequestParameters: { GetPlayerProfile: true }
-          })
+          body: JSON.stringify({ TitleId: this.titleId, CustomId: args.CUSTOM_ID, CreateAccount: true, InfoRequestParameters: { GetPlayerProfile: true } })
         });
-        const result = await response.json();
+        const result = await res.json();
         if (result.code === 200) {
           this.sessionTicket = result.data.SessionTicket;
           this.masterPlayerId = result.data.PlayFabId;
@@ -316,18 +150,19 @@
       Scratch.vm.runtime.startHats('PlayfabExtension_onLoggedOut');
     }
 
+    isLoggedIn()        { return this.loggedIn; }
+    getMasterPlayerId() { return this.masterPlayerId; }
+    getTitlePlayerId()  { return this.titlePlayerId; }
+
     async linkCustomId(args) {
-      if (!this.sessionTicket) {
-        this.lastLinkResult = 'Failed: not logged in';
-        return;
-      }
+      if (!this.sessionTicket) { this.lastLinkResult = 'Failed: not logged in'; return; }
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/LinkCustomID`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/LinkCustomID`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
           body: JSON.stringify({ CustomId: args.TEXT.trim(), ForceLink: false })
         });
-        const result = await response.json();
+        const result = await res.json();
         if (result.code === 200) {
           this.lastLinkResult = 'Success: linked ' + args.TEXT.trim();
         } else {
@@ -340,89 +175,20 @@
       }
     }
 
-    getLinkResult() { return this.lastLinkResult || 'No link attempted yet'; }
+    getLinkResult() { return this.lastLinkResult; }
 
-    isLoggedIn()        { return this.loggedIn; }
-    getMasterPlayerId() { return this.masterPlayerId; }
-    getTitlePlayerId()  { return this.titlePlayerId; }
-    setTitleId(args)    { this.titleId = args.ID; }
-    setSecretKey(args)  { this.secretKey = args.KEY; }
-
-    // ─────────────────────────────────────────────────────────────
-    // BAN HANDLING
-    // ─────────────────────────────────────────────────────────────
-
-    handleBanError(result) {
-      if (result.errorCode === 1084 || result.errorCode === 1002 || result.error === 'AccountBanned') {
-        this.isPlayerBanned = true;
-        const details = result.errorDetails;
-        if (details) {
-          const reasonKey = Object.keys(details)[0];
-          const expiryRaw = Object.values(details)[0]?.[0];
-          this.banReason = reasonKey || 'Banned by Admin';
-          if (expiryRaw) {
-            const parsed = new Date(expiryRaw);
-            this.banExpiryTimestamp = parsed.getTime();
-            console.log('[PlayFab Ban Debug]');
-            console.log('Raw expiry from PlayFab:', expiryRaw);
-            console.log('Parsed expiry (local):', parsed.toLocaleString());
-            console.log('Current time (local):', new Date().toLocaleString());
-            console.log('Diff in hours (raw):', (parsed.getTime() - Date.now()) / 3600000);
-          } else {
-            this.banExpiryTimestamp = null; // permanent
-          }
-        } else {
-          this.banReason = 'Banned by Admin';
-          this.banExpires = 'Unknown';
-        }
-        this.lastError = 'Login failed: Account Banned';
-      } else {
-        this.lastError = result.errorMessage || 'Unknown Error';
-      }
-    }
-
-    getIsBanned()  { return this.isPlayerBanned; }
-    getBanReason() { return this.banReason; }
-    getBanExpires() {
-      if (!this.isPlayerBanned) return 0;
-      if (this.banExpiryTimestamp === null) return 'Permanent';
-      const hoursLeft = Math.floor((this.banExpiryTimestamp - Date.now()) / 3600000);
-      return Math.max(0, hoursLeft);
-    }
-
-    async banPlayer(args) {
-      if (!this.secretKey) return;
-      await fetch(`https://${this.titleId}.playfabapi.com/Admin/BanUsers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-SecretKey': this.secretKey },
-        body: JSON.stringify({ Bans: [{ PlayFabId: args.PLAYFAB_ID, Reason: args.REASON, DurationInHours: args.HOURS }] })
-      });
-    }
-
-    async unbanPlayer(args) {
-      if (!this.secretKey) return;
-      await fetch(`https://${this.titleId}.playfabapi.com/Admin/RevokeAllBansForUser`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-SecretKey': this.secretKey },
-        body: JSON.stringify({ PlayFabId: args.PLAYFAB_ID })
-      });
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // DISPLAY NAME
-    // ─────────────────────────────────────────────────────────────
-
+    // ── DISPLAY NAME ───────────────────────────────────────────────
     getDisplayName() { return this.displayName; }
 
     async setDisplayName(args) {
       if (!this.sessionTicket) return;
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/UpdateUserTitleDisplayName`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/UpdateUserTitleDisplayName`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
           body: JSON.stringify({ DisplayName: args.NAME })
         });
-        const result = await response.json();
+        const result = await res.json();
         if (result.code === 200) {
           this.displayName = result.data.DisplayName;
         } else {
@@ -433,10 +199,7 @@
       }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // CURRENCY
-    // ─────────────────────────────────────────────────────────────
-
+    // ── CURRENCY ───────────────────────────────────────────────────
     getCurrencyBalance(args) { return this.currencies[args.VC] || 0; }
 
     async adminAddCurrency(args) {
@@ -448,22 +211,21 @@
       });
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // INVENTORY & STORE
-    // ─────────────────────────────────────────────────────────────
-
+    // ── INVENTORY & STORE ──────────────────────────────────────────
     async updateInventory() {
       if (!this.sessionTicket) return;
-      const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetUserInventory`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
-        body: JSON.stringify({})
-      });
-      const result = await response.json();
-      if (result.code === 200) {
-        this.inventory = result.data.Inventory.map(i => i.ItemId);
-        this.currencies = result.data.VirtualCurrency;
-      }
+      try {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetUserInventory`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
+          body: JSON.stringify({})
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          this.inventory = result.data.Inventory.map(i => i.ItemId);
+          this.currencies = result.data.VirtualCurrency;
+        }
+      } catch (e) {}
     }
 
     getInventoryList() { return JSON.stringify(this.inventory); }
@@ -472,22 +234,20 @@
     async fetchCatalog() {
       if (!this.sessionTicket) return;
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetCatalogItems`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetCatalogItems`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
           body: JSON.stringify({ CatalogVersion: '' })
         });
-        const result = await response.json();
+        const result = await res.json();
         if (result.code === 200) {
-          // Catalog includes both items and bundles — store all of them
           result.data.Catalog.forEach(item => {
-            console.log('[PlayFab Catalog Debug] Raw item:', JSON.stringify(item));
             this.catalog[item.ItemId] = {
               prices: item.VirtualCurrencyPrices || {},
               description: item.Description || 'No description available',
               displayName: item.DisplayName || item.ItemId,
-              type: item.ItemClass || 'item',
               imageUrl: item.ItemImageUrl || '',
+              type: item.ItemClass || 'item',
               raw: item
             };
           });
@@ -495,36 +255,15 @@
       } catch (e) {}
     }
 
-    getItemPrice(args) {
-      const item = this.catalog[args.ITEM_ID];
-      return (item && item.prices[args.VC] !== undefined) ? item.prices[args.VC] : 'Not Found';
-    }
-
-    getItemDescription(args) {
-      const item = this.catalog[args.ITEM_ID];
-      return item ? item.description : 'Not Found';
-    }
-
-    getItemDisplayName(args) {
-      const item = this.catalog[args.ITEM_ID];
-      return item ? item.displayName : 'Not Found';
-    }
-
-    getItemImageUrl(args) {
-      const item = this.catalog[args.ITEM_ID];
-      if (!item) return 'Not Found';
-      return item.imageUrl || 'No image set';
-    }
-
-    getRawCatalogEntry(args) {
-      const item = this.catalog[args.ITEM_ID];
-      if (!item) return 'Not Found';
-      return JSON.stringify(item.raw || item);
-    }
+    getItemPrice(args)       { const i = this.catalog[args.ITEM_ID]; return (i && i.prices[args.VC] !== undefined) ? i.prices[args.VC] : 'Not Found'; }
+    getItemDisplayName(args) { const i = this.catalog[args.ITEM_ID]; return i ? i.displayName : 'Not Found'; }
+    getItemDescription(args) { const i = this.catalog[args.ITEM_ID]; return i ? i.description : 'Not Found'; }
+    getItemImageUrl(args)    { const i = this.catalog[args.ITEM_ID]; return i ? (i.imageUrl || 'No image set') : 'Not Found'; }
+    getRawCatalogEntry(args) { const i = this.catalog[args.ITEM_ID]; return i ? JSON.stringify(i.raw) : 'Not Found'; }
 
     getPricedCatalogItems() {
       const priced = Object.entries(this.catalog)
-        .filter(([id, item]) => item.prices && Object.keys(item.prices).length > 0)
+        .filter(([id, item]) => Object.keys(item.prices).length > 0)
         .map(([id]) => id);
       return JSON.stringify(priced);
     }
@@ -532,12 +271,12 @@
     async purchaseItem(args) {
       if (!this.sessionTicket) return;
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/PurchaseItem`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/PurchaseItem`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
           body: JSON.stringify({ ItemId: args.ITEM_ID, VirtualCurrency: args.VC, Price: args.PRICE })
         });
-        const result = await response.json();
+        const result = await res.json();
         if (result.code === 200) {
           await this.updateInventory();
         } else {
@@ -560,23 +299,17 @@
     async redeemCoupon(args) {
       if (!this.sessionTicket) return;
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/RedeemCoupon`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/RedeemCoupon`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
           body: JSON.stringify({ CouponCode: args.COUPON.trim() })
         });
-        const result = await response.json();
+        const result = await res.json();
         if (result.code === 200) {
-          // Refresh inventory so any granted items appear immediately
           await this.updateInventory();
           const granted = result.data.GrantedItems || [];
-          const grantedNames = granted.map(i => {
-            const catalogEntry = this.catalog[i.ItemId];
-            return catalogEntry ? catalogEntry.displayName : i.ItemId;
-          });
-          this.lastRedeemResult = grantedNames.length > 0
-            ? 'Success! Got: ' + grantedNames.join(', ')
-            : 'Code redeemed (no items granted)';
+          const names = granted.map(i => { const c = this.catalog[i.ItemId]; return c ? c.displayName : i.ItemId; });
+          this.lastRedeemResult = names.length > 0 ? 'Success! Got: ' + names.join(', ') : 'Code redeemed (no items granted)';
         } else {
           this.lastRedeemResult = result.errorMessage || 'Code redemption failed';
           this.lastError = this.lastRedeemResult;
@@ -587,28 +320,22 @@
       }
     }
 
-    getLastRedeemResult() { return this.lastRedeemResult || 'No code redeemed yet'; }
+    getLastRedeemResult() { return this.lastRedeemResult; }
 
-    // ─────────────────────────────────────────────────────────────
-    // PLAYER DATA (READ-ONLY)
-    // ─────────────────────────────────────────────────────────────
-
+    // ── PLAYER DATA ────────────────────────────────────────────────
     async fetchReadOnlyData() {
       if (!this.sessionTicket) return;
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetUserReadOnlyData`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetUserReadOnlyData`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
           body: JSON.stringify({})
         });
-        const result = await response.json();
+        const result = await res.json();
         if (result.code === 200) {
           const raw = result.data.Data || {};
           this.readOnlyData = {};
-      this.lastRedeemResult = 'No code redeemed yet';
-          for (const key in raw) {
-            this.readOnlyData[key] = raw[key].Value;
-          }
+          for (const key in raw) { this.readOnlyData[key] = raw[key].Value; }
         } else {
           this.lastError = result.errorMessage || 'Failed to fetch read-only data';
         }
@@ -617,40 +344,69 @@
       }
     }
 
-    getReadOnlyKey(args) {
-      const val = this.readOnlyData[args.KEY];
-      return val !== undefined ? val : 'Not Found';
-    }
+    getReadOnlyKey(args)   { const v = this.readOnlyData[args.KEY]; return v !== undefined ? v : 'Not Found'; }
+    getAllReadOnlyData()    { return JSON.stringify(this.readOnlyData); }
 
-    getAllReadOnlyData() { return JSON.stringify(this.readOnlyData); }
-
-    // ─────────────────────────────────────────────────────────────
-    // TITLE DATA
-    // ─────────────────────────────────────────────────────────────
-
+    // ── TITLE DATA ─────────────────────────────────────────────────
     async getTitleData(args) {
       try {
-        const response = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetTitleData`, {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetTitleData`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
           body: JSON.stringify({ Keys: [args.KEY] })
         });
-        const result = await response.json();
-        if (result.code === 200) {
-          return result.data.Data[args.KEY] || 'Not Found';
-        }
-        return 'Error';
-      } catch (e) {
-        return 'Error';
-      }
+        const result = await res.json();
+        return result.code === 200 ? (result.data.Data[args.KEY] || 'Not Found') : 'Error';
+      } catch (e) { return 'Error'; }
     }
 
     getOnlineCount() { return 1; }
 
-    // ─────────────────────────────────────────────────────────────
-    // UTILITIES
-    // ─────────────────────────────────────────────────────────────
+    // ── BAN SYSTEM ─────────────────────────────────────────────────
+    handleBanError(result) {
+      if (result.errorCode === 1084 || result.errorCode === 1002 || result.error === 'AccountBanned') {
+        this.isPlayerBanned = true;
+        const details = result.errorDetails;
+        if (details) {
+          this.banReason = Object.keys(details)[0] || 'Banned by Admin';
+          const expiryRaw = Object.values(details)[0]?.[0];
+          this.banExpiryTimestamp = expiryRaw ? new Date(expiryRaw).getTime() : null;
+        } else {
+          this.banReason = 'Banned by Admin';
+        }
+        this.lastError = 'Login failed: Account Banned';
+      } else {
+        this.lastError = result.errorMessage || 'Unknown Error';
+      }
+    }
 
+    getIsBanned()  { return this.isPlayerBanned; }
+    getBanReason() { return this.banReason; }
+    getBanExpires() {
+      if (!this.isPlayerBanned) return 0;
+      if (this.banExpiryTimestamp === null) return 'Permanent';
+      return Math.max(0, Math.floor((this.banExpiryTimestamp - Date.now()) / 3600000));
+    }
+
+    async banPlayer(args) {
+      if (!this.secretKey) return;
+      await fetch(`https://${this.titleId}.playfabapi.com/Admin/BanUsers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-SecretKey': this.secretKey },
+        body: JSON.stringify({ Bans: [{ PlayFabId: args.PLAYFAB_ID, Reason: args.REASON, DurationInHours: args.HOURS }] })
+      });
+    }
+
+    async unbanPlayer(args) {
+      if (!this.secretKey) return;
+      await fetch(`https://${this.titleId}.playfabapi.com/Admin/RevokeAllBansForUser`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-SecretKey': this.secretKey },
+        body: JSON.stringify({ PlayFabId: args.PLAYFAB_ID })
+      });
+    }
+
+    // ── UTILITIES ──────────────────────────────────────────────────
     getError() { return this.lastError; }
   }
 
