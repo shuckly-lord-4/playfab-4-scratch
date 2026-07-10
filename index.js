@@ -1,9 +1,13 @@
 (function(Scratch) {
   'use strict';
 
+  if (!Scratch.extensions.unsandboxed) {
+    throw new Error('PlayFab Cloud must run unsandboxed');
+  }
+
   const icon = 'https://developer.playfab.com/React/img/playfab-mark.DOA-oZnA.png';
 
-  class Playfab {
+  class PlayFabUltimatePermanent {
     constructor() {
       this.titleId = '';
       this.secretKey = '';
@@ -659,5 +663,5 @@
     getError() { return this.lastError; }
   }
 
-  Scratch.extensions.register(new Playfab());
+  Scratch.extensions.register(new PlayFabUltimatePermanent());
 })(Scratch);
