@@ -52,6 +52,7 @@
           { opcode: 'isLoggedIn', blockType: Scratch.BlockType.BOOLEAN, text: 'is logged in?' },
           { opcode: 'getMasterPlayerId', blockType: Scratch.BlockType.REPORTER, text: 'Master Player ID' },
           { opcode: 'getTitlePlayerId', blockType: Scratch.BlockType.REPORTER, text: 'Title Player ID' },
+          { opcode: 'getPlayerDisplayName', blockType: Scratch.BlockType.REPORTER, text: 'display name of player [PLAYFAB_ID]', arguments: { PLAYFAB_ID: { type: Scratch.ArgumentType.STRING, defaultValue: 'ID_HERE' } } },
           { opcode: 'linkCustomId', blockType: Scratch.BlockType.COMMAND, text: 'link [TEXT] to account', arguments: { TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'my_custom_id' } } },
           { opcode: 'getLinkResult', blockType: Scratch.BlockType.REPORTER, text: 'last link result' },
 
@@ -177,6 +178,24 @@
 
     // ── DISPLAY NAME ───────────────────────────────────────────────
     getDisplayName() { return this.displayName; }
+
+    async getPlayerDisplayName(args) {
+      if (!this.sessionTicket) return 'Not logged in';
+      try {
+        const res = await fetch(`https://${this.titleId}.playfabapi.com/Client/GetPlayerProfile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Authorization': this.sessionTicket },
+          body: JSON.stringify({ PlayFabId: args.PLAYFAB_ID, ProfileConstraints: { ShowDisplayName: true } })
+        });
+        const result = await res.json();
+        if (result.code === 200) {
+          return result.data.PlayerProfile?.DisplayName || 'No display name set';
+        }
+        return result.errorMessage || 'Error';
+      } catch (e) {
+        return 'Connection Error: ' + e.message;
+      }
+    }
 
     async setDisplayName(args) {
       if (!this.sessionTicket) return;
